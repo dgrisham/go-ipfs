@@ -237,9 +237,9 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 			e.peerRequestQueue.Remove(entry.Cid, p)
 		} else {
 			log.Debugf("wants %s - %d", entry.Cid, entry.Priority)
-			l.Wants(entry.Cid, entry.Priority)
+			l.Wants(entry.Cid, entry.Priority, entry.Size)
 			if exists, err := e.bs.Has(entry.Cid); err == nil && exists {
-				e.peerRequestQueue.Push(entry.Entry, p)
+				e.peerRequestQueue.Push(entry.Entry, p, l.Receipt())
 				newWorkExists = true
 			}
 		}
@@ -258,7 +258,7 @@ func (e *Engine) addBlock(block blocks.Block) {
 	for _, l := range e.ledgerMap {
 		l.lk.Lock()
 		if entry, ok := l.WantListContains(block.Cid()); ok {
-			e.peerRequestQueue.Push(entry, l.Partner)
+			e.peerRequestQueue.Push(entry, l.Partner, l.Receipt())
 			work = true
 		}
 		l.lk.Unlock()

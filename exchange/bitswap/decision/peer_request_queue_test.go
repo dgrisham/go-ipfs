@@ -2,6 +2,10 @@ package decision
 
 import (
 	"fmt"
+	"math"
+	"math/rand"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/ipfs/go-ipfs/exchange/bitswap/wantlist"
@@ -10,56 +14,120 @@ import (
 	cid "gx/ipfs/QmeSrf6pzut73u6zLQkRFQ3ygt3k6XFT2kjdYP8Tnkwwyg/go-cid"
 )
 
-func TestAllocations(t *testing.T) {
-	prq := newPRQ(ReciprocationStrategy)
-	blockSize := 10
-	for i := 1; i <= 2; i++ {
-		partner := testutil.RandPeerIDFatal(t)
-		elcid := cid.NewCidV0(u.Hash([]byte(fmt.Sprint(i))))
-		receipt := ReceiptFromLedger(newLedger(partner))
-		receipt.Value = float64(i)
-		prq.Push(&wantlist.Entry{Cid: elcid}, partner, receipt, blockSize)
+func TestPushPop(t *testing.T) {
+	prq := newPRQ()
+	partner := testutil.RandPeerIDFatal(t)
+	alphabet := strings.Split("abcdefghijklmnopqrstuvwxyz", "")
+	vowels := strings.Split("aeiou", "")
+	consonants := func() []string {
+		var out []string
+		for _, letter := range alphabet {
+			skip := false
+			for _, vowel := range vowels {
+				if letter == vowel {
+					skip = true
+				}
+			}
+			if !skip {
+				out = append(out, letter)
+			}
+		}
+		return out
+	}()
+	sort.Strings(alphabet)
+	sort.Strings(vowels)
+	sort.Strings(consonants)
+
+	// add a bunch of blocks. cancel some. drain the queue. the queue should only have the kept entries
+
+	for _, index := range rand.Perm(len(alphabet)) { // add blocks for all letters
+		letter := alphabet[index]
+		t.Log(partner.String())
+
+		c := cid.NewCidV0(u.Hash([]byte(letter)))
+		l := newLedger(partner).Receipt()
+		prq.Push(&wantlist.Entry{Cid: c, Priority: math.MaxInt32 - index}, partner, l)
+	}
+	for _, consonant := range consonants {
+		c := cid.NewCidV0(u.Hash([]byte(consonant)))
+		prq.Remove(c, partner)
 	}
 
-	prq.initRound()
+	prq.fullThaw()
 
-	for i, alloc := range (*prq.rrq).allocations {
-		fmt.Printf("peer %d, allocation: %d\n", i, alloc.allocation)
+	var out []string
+	for {
+		received := prq.Pop()
+		if received == nil {
+			break
+		}
+
+		out = append(out, received.Entry.Cid.String())
+	}
+
+	// Entries popped should already be in correct order
+	for i, expected := range vowels {
+		exp := cid.NewCidV0(u.Hash([]byte(expected))).String()
+		if out[i] != exp {
+			t.Fatal("received", out[i], "expected", expected)
+		}
 	}
 }
 
-func TestPop(t *testing.T) {
-	prq := newPRQ(ReciprocationStrategy)
+// This test checks that peers wont starve out other peers
+func TestPeerRepeats(t *testing.T) {
+	prq := newPRQ()
+	a := testutil.RandPeerIDFatal(t)
+	b := testutil.RandPeerIDFatal(t)
+	c := testutil.RandPeerIDFatal(t)
+	d := testutil.RandPeerIDFatal(t)
 
+	// Have each push some blocks
+
+	ra := newLedger(a).Receipt()
+	rb := newLedger(b).Receipt()
+	rc := newLedger(c).Receipt()
+	rd := newLedger(d).Receipt()
 	for i := 0; i < 5; i++ {
 		elcid := cid.NewCidV0(u.Hash([]byte(fmt.Sprint(i))))
-		prq.Push(&wantlist.Entry{Cid: elcid}, a)
-		prq.Push(&wantlist.Entry{Cid: elcid}, b)
-		prq.Push(&wantlist.Entry{Cid: elcid}, c)
-		prq.Push(&wantlist.Entry{Cid: elcid}, d)
+		prq.Push(&wantlist.Entry{Cid: elcid}, a, ra)
+		prq.Push(&wantlist.Entry{Cid: elcid}, b, rb)
+		prq.Push(&wantlist.Entry{Cid: elcid}, c, rc)
+		prq.Push(&wantlist.Entry{Cid: elcid}, d, rd)
 	}
 
-	blockSize := 10
-	for i, peer := range peers {
-		for j := 0; j < 100; j++ {
-			elcid := cid.NewCidV0(u.Hash([]byte(fmt.Sprint(j))))
-			prq.Push(&wantlist.Entry{Cid: elcid}, peer, receipts[i], blockSize)
+	// now, pop off four entries, there should be one from each
+	var targets []string
+	var tasks []*peerRequestTask
+	for i := 0; i < 4; i++ {
+		t := prq.Pop()
+		targets = append(targets, t.Target.Pretty())
+		tasks = append(tasks, t)
+	}
+
+	expected := []string{a.Pretty(), b.Pretty(), c.Pretty(), d.Pretty()}
+	sort.Strings(expected)
+	sort.Strings(targets)
+
+	t.Log(targets)
+	t.Log(expected)
+	for i, s := range targets {
+		if expected[i] != s {
+			t.Fatal("unexpected peer", s, expected[i])
 		}
 	}
 
-	prq.initRound()
-	j := 0
-	for len((*prq.rrq).allocations) > 0 {
-		fmt.Printf("Round %d\n-------\n", j)
-		d := len((*prq.rrq).allocations)
-		for i, alloc := range (*prq.rrq).allocations {
-			fmt.Printf("peer %d, allocation: %d\n", (i+(j/d))%d, alloc.allocation)
+	// Now, if one of the tasks gets finished, the next task off the queue should
+	// be for the same peer
+	for blockI := 0; blockI < 4; blockI++ {
+		for i := 0; i < 4; i++ {
+			// its okay to mark the same task done multiple times here (JUST FOR TESTING)
+			tasks[i].Done()
+
+			ntask := prq.Pop()
+			if ntask.Target != tasks[i].Target {
+				t.Fatal("Expected task from peer with lowest active count")
+			}
 		}
-		prq.Pop()
-		fmt.Println()
-		j++
-	}
-	for i, alloc := range (*prq.rrq).allocations {
-		fmt.Printf("peer %d, allocation: %d\n", i, alloc.allocation)
 	}
 }
