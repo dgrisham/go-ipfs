@@ -242,6 +242,7 @@ func setupNode(ctx context.Context, n *IpfsNode, cfg *BuildCfg) error {
 			RoundBurst: conf.Experimental.BitswapRRQRoundBurst,
 			Strategy:   getStrategyFunc(conf.Experimental.BitswapStrategy),
 		}
+	}
 
 	hostOption := cfg.Host
 	if cfg.DisableEncryptedConnections {
