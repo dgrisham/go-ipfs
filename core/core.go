@@ -980,9 +980,9 @@ func constructClientDHTRouting(ctx context.Context, host p2phost.Host, dstore ds
 // TODO: verify that this is the right place for this function
 func getStrategyFunc(strategyStr string) bsengine.Strategy {
 	strategies := map[string]bsengine.Strategy{
-		"Identity": bsengine.Identity,
-		"Sigmoid":  bsengine.Sigmoid,
-		"Tanh":     bsengine.Tanh,
+		"identity": bsengine.Identity,
+		"sigmoid":  bsengine.Sigmoid,
+		"tanh":     bsengine.Tanh,
 	}
 	if strategy, ok := strategies[strategyStr]; ok {
 		return strategy
@@ -999,4 +999,4 @@ var DHTOption RoutingOption = constructDHTRouting
 var DHTClientOption RoutingOption = constructClientDHTRouting
 var NilRouterOption RoutingOption = nilrouting.ConstructNilRouting
 
-var DefaultStrategy string = "Identity"
+var DefaultStrategy string = "identity"
