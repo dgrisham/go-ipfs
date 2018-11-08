@@ -10,11 +10,11 @@ import (
 	"sort"
 
 	"github.com/ipfs/go-ipfs/pin/internal/pb"
-	"github.com/ipfs/go-merkledag"
+	"gx/ipfs/QmRDaC5z6yXkXTTSWzaxs2sSVBon5RRCN6eNtMmpuHtKCr/go-merkledag"
 
-	"github.com/gogo/protobuf/proto"
-	cid "github.com/ipfs/go-cid"
-	ipld "github.com/ipfs/go-ipld-format"
+	ipld "gx/ipfs/QmX5CsuHyVZeTLxgRSYkgLSDQKb9UjE8xnhQzCEJWWWFsC/go-ipld-format"
+	cid "gx/ipfs/QmZFbDTY9jfSBms2MchvYM9oYRbAF19K7Pby47yDBfpPrb/go-cid"
+	"gx/ipfs/QmdxUuburamoF6zF9qjeQC4WYcWGbWuRmdLacMEsW8ioD8/gogo-protobuf/proto"
 )
 
 const (

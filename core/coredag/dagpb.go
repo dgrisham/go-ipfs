@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"math"
 
-	"github.com/ipfs/go-merkledag"
+	"gx/ipfs/QmRDaC5z6yXkXTTSWzaxs2sSVBon5RRCN6eNtMmpuHtKCr/go-merkledag"
 
-	cid "github.com/ipfs/go-cid"
-	ipld "github.com/ipfs/go-ipld-format"
-	mh "github.com/multiformats/go-multihash"
+	mh "gx/ipfs/QmPnFwZ2JXKnXgMw8CdBPxn7FWh6LLdjUjxV1fKHuJnkr8/go-multihash"
+	ipld "gx/ipfs/QmX5CsuHyVZeTLxgRSYkgLSDQKb9UjE8xnhQzCEJWWWFsC/go-ipld-format"
+	cid "gx/ipfs/QmZFbDTY9jfSBms2MchvYM9oYRbAF19K7Pby47yDBfpPrb/go-cid"
 )
 
 func dagpbJSONParser(r io.Reader, mhType uint64, mhLen int) ([]ipld.Node, error) {

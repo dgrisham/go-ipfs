@@ -3,7 +3,7 @@
 package util
 
 import (
-	unix "golang.org/x/sys/unix"
+	unix "gx/ipfs/QmVGjyM9i2msKvLXwh9VosCTgP4mL91kC7hDmqnwTTx6Hu/sys/unix"
 )
 
 func init() {

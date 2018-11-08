@@ -11,13 +11,13 @@ import (
 	e "github.com/ipfs/go-ipfs/core/commands/e"
 	coredag "github.com/ipfs/go-ipfs/core/coredag"
 	pin "github.com/ipfs/go-ipfs/pin"
-	path "github.com/ipfs/go-path"
+	path "gx/ipfs/QmTKaiDxQqVxmA1bRipSuP7hnTSgnMSmEa98NYeS6fcoiv/go-path"
 
-	cid "github.com/ipfs/go-cid"
-	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
-	files "github.com/ipfs/go-ipfs-cmdkit/files"
-	ipld "github.com/ipfs/go-ipld-format"
-	mh "github.com/multiformats/go-multihash"
+	mh "gx/ipfs/QmPnFwZ2JXKnXgMw8CdBPxn7FWh6LLdjUjxV1fKHuJnkr8/go-multihash"
+	cmdkit "gx/ipfs/QmSP88ryZkHSRn1fnngAaV2Vcn63WUJzAavnRM9CVdU1Ky/go-ipfs-cmdkit"
+	files "gx/ipfs/QmSP88ryZkHSRn1fnngAaV2Vcn63WUJzAavnRM9CVdU1Ky/go-ipfs-cmdkit/files"
+	ipld "gx/ipfs/QmX5CsuHyVZeTLxgRSYkgLSDQKb9UjE8xnhQzCEJWWWFsC/go-ipld-format"
+	cid "gx/ipfs/QmZFbDTY9jfSBms2MchvYM9oYRbAF19K7Pby47yDBfpPrb/go-cid"
 )
 
 var DagCmd = &cmds.Command{

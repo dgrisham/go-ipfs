@@ -11,8 +11,8 @@ package commands
 import (
 	"io"
 
-	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
-	logging "github.com/ipfs/go-log"
+	logging "gx/ipfs/QmRREK2CAZ5Re2Bd9zZFG6FeYDppUWt5cMgsoUEp3ktgSr/go-log"
+	cmdkit "gx/ipfs/QmSP88ryZkHSRn1fnngAaV2Vcn63WUJzAavnRM9CVdU1Ky/go-ipfs-cmdkit"
 )
 
 var log = logging.Logger("command")

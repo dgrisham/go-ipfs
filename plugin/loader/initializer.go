@@ -3,9 +3,9 @@ package loader
 import (
 	"github.com/ipfs/go-ipfs/core/coredag"
 	"github.com/ipfs/go-ipfs/plugin"
-	"github.com/opentracing/opentracing-go"
+	"gx/ipfs/QmWLWmRVSiagqP15jczsGME1qpob6HDbtbHAY2he9W5iUo/opentracing-go"
 
-	ipld "github.com/ipfs/go-ipld-format"
+	ipld "gx/ipfs/QmX5CsuHyVZeTLxgRSYkgLSDQKb9UjE8xnhQzCEJWWWFsC/go-ipld-format"
 )
 
 func initialize(plugins []plugin.Plugin) error {

@@ -3,7 +3,7 @@ package options
 import (
 	"math"
 
-	cid "github.com/ipfs/go-cid"
+	cid "gx/ipfs/QmZFbDTY9jfSBms2MchvYM9oYRbAF19K7Pby47yDBfpPrb/go-cid"
 )
 
 type DagPutSettings struct {

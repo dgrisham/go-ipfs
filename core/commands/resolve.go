@@ -12,9 +12,9 @@ import (
 	ncmd "github.com/ipfs/go-ipfs/core/commands/name"
 	ns "github.com/ipfs/go-ipfs/namesys"
 	nsopts "github.com/ipfs/go-ipfs/namesys/opts"
-	path "github.com/ipfs/go-path"
+	path "gx/ipfs/QmTKaiDxQqVxmA1bRipSuP7hnTSgnMSmEa98NYeS6fcoiv/go-path"
 
-	"github.com/ipfs/go-ipfs-cmdkit"
+	"gx/ipfs/QmSP88ryZkHSRn1fnngAaV2Vcn63WUJzAavnRM9CVdU1Ky/go-ipfs-cmdkit"
 )
 
 var ResolveCmd = &cmds.Command{

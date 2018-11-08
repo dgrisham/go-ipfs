@@ -3,10 +3,10 @@ package legacy
 import (
 	"io"
 
-	"github.com/ipfs/go-ipfs-cmds"
+	"gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds"
 
 	oldcmds "github.com/ipfs/go-ipfs/commands"
-	logging "github.com/ipfs/go-log"
+	logging "gx/ipfs/QmRREK2CAZ5Re2Bd9zZFG6FeYDppUWt5cMgsoUEp3ktgSr/go-log"
 )
 
 var log = logging.Logger("cmds/lgc")

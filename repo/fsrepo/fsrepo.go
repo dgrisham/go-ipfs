@@ -20,14 +20,14 @@ import (
 
 	"github.com/ipfs/go-ipfs/Godeps/_workspace/src/github.com/mitchellh/go-homedir"
 
-	ds "github.com/ipfs/go-datastore"
-	measure "github.com/ipfs/go-ds-measure"
-	lockfile "github.com/ipfs/go-fs-lock"
-	config "github.com/ipfs/go-ipfs-config"
-	serialize "github.com/ipfs/go-ipfs-config/serialize"
-	util "github.com/ipfs/go-ipfs-util"
-	logging "github.com/ipfs/go-log"
-	ma "github.com/multiformats/go-multiaddr"
+	util "gx/ipfs/QmPdKqUcHGFdeSpvjVoaTRPPstGif9GBZb5Q56RVw9o69A/go-ipfs-util"
+	logging "gx/ipfs/QmRREK2CAZ5Re2Bd9zZFG6FeYDppUWt5cMgsoUEp3ktgSr/go-log"
+	measure "gx/ipfs/QmRa2HJZNKkkkbNVPkZu9VCzst4B3JmxoaR97EUFhWcK6m/go-ds-measure"
+	ds "gx/ipfs/QmVG5gxteQNEMhrS8prJSmU2C9rebtFuTd3SYZ5kE3YZ5k/go-datastore"
+	config "gx/ipfs/QmXUU23sGKdT7AHpyJ4aSvYpXbWjbiuYG1CYhZ3ai3btkG/go-ipfs-config"
+	serialize "gx/ipfs/QmXUU23sGKdT7AHpyJ4aSvYpXbWjbiuYG1CYhZ3ai3btkG/go-ipfs-config/serialize"
+	ma "gx/ipfs/QmYmsdtJ3HsodkePE3eU3TsCaP2YvPZJ4LoXnNkDE5Tpt7/go-multiaddr"
+	lockfile "gx/ipfs/QmZzgxSj8QpR58KmdeNj97eD66X6xeDAFNjpP2xTY9oKeQ/go-fs-lock"
 )
 
 // LockFile is the filename of the repo lock, relative to config dir
