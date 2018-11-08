@@ -9,8 +9,8 @@ import (
 	"github.com/ipfs/go-ipfs/core/commands/e"
 	"github.com/ipfs/go-ipfs/core/coreapi/interface/options"
 
-	"gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds"
-	"gx/ipfs/QmSP88ryZkHSRn1fnngAaV2Vcn63WUJzAavnRM9CVdU1Ky/go-ipfs-cmdkit"
+	"gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds"
+	"gx/ipfs/Qmde5VP1qUkyQXKCfmEUA7bP64V2HAptbJ7phuPp7jXWwg/go-ipfs-cmdkit"
 )
 
 var KeyCmd = &cmds.Command{
@@ -55,39 +55,41 @@ type KeyRenameOutput struct {
 	Overwrite bool
 }
 
+const (
+	keyStoreTypeOptionName = "type"
+	keyStoreSizeOptionName = "size"
+)
+
 var keyGenCmd = &cmds.Command{
 	Helptext: cmdkit.HelpText{
 		Tagline: "Create a new keypair",
 	},
 	Options: []cmdkit.Option{
-		cmdkit.StringOption("type", "t", "type of the key to create [rsa, ed25519]"),
-		cmdkit.IntOption("size", "s", "size of the key to generate"),
+		cmdkit.StringOption(keyStoreTypeOptionName, "t", "type of the key to create [rsa, ed25519]"),
+		cmdkit.IntOption(keyStoreSizeOptionName, "s", "size of the key to generate"),
 	},
 	Arguments: []cmdkit.Argument{
 		cmdkit.StringArg("name", true, false, "name of key to create"),
 	},
-	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) {
+	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
 		api, err := cmdenv.GetApi(env)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
-		typ, f := req.Options["type"].(string)
+		typ, f := req.Options[keyStoreTypeOptionName].(string)
 		if !f {
-			res.SetError(fmt.Errorf("please specify a key type with --type"), cmdkit.ErrNormal)
-			return
+			return fmt.Errorf("please specify a key type with --type")
 		}
 
 		name := req.Arguments[0]
 		if name == "self" {
-			res.SetError(fmt.Errorf("cannot create key with name 'self'"), cmdkit.ErrNormal)
-			return
+			return fmt.Errorf("cannot create key with name 'self'")
 		}
 
 		opts := []options.KeyGenerateOption{options.Key.Type(typ)}
 
-		size, sizefound := req.Options["size"].(int)
+		size, sizefound := req.Options[keyStoreSizeOptionName].(int)
 		if sizefound {
 			opts = append(opts, options.Key.Size(size))
 		}
@@ -95,11 +97,10 @@ var keyGenCmd = &cmds.Command{
 		key, err := api.Key().Generate(req.Context, name, opts...)
 
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
-		cmds.EmitOnce(res, &KeyOutput{
+		return cmds.EmitOnce(res, &KeyOutput{
 			Name: name,
 			Id:   key.ID().Pretty(),
 		})
@@ -125,17 +126,15 @@ var keyListCmd = &cmds.Command{
 	Options: []cmdkit.Option{
 		cmdkit.BoolOption("l", "Show extra information about keys."),
 	},
-	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) {
+	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
 		api, err := cmdenv.GetApi(env)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
 		keys, err := api.Key().List(req.Context)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
 		list := make([]KeyOutput, 0, len(keys))
@@ -144,13 +143,17 @@ var keyListCmd = &cmds.Command{
 			list = append(list, KeyOutput{Name: key.Name(), Id: key.ID().Pretty()})
 		}
 
-		cmds.EmitOnce(res, &KeyOutputList{list})
+		return cmds.EmitOnce(res, &KeyOutputList{list})
 	},
 	Encoders: cmds.EncoderMap{
 		cmds.Text: keyOutputListMarshaler(),
 	},
 	Type: KeyOutputList{},
 }
+
+const (
+	keyStoreForceOptionName = "force"
+)
 
 var keyRenameCmd = &cmds.Command{
 	Helptext: cmdkit.HelpText{
@@ -161,26 +164,24 @@ var keyRenameCmd = &cmds.Command{
 		cmdkit.StringArg("newName", true, false, "new name of the key"),
 	},
 	Options: []cmdkit.Option{
-		cmdkit.BoolOption("force", "f", "Allow to overwrite an existing key."),
+		cmdkit.BoolOption(keyStoreForceOptionName, "f", "Allow to overwrite an existing key."),
 	},
-	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) {
+	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
 		api, err := cmdenv.GetApi(env)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
 		name := req.Arguments[0]
 		newName := req.Arguments[1]
-		force, _ := req.Options["force"].(bool)
+		force, _ := req.Options[keyStoreForceOptionName].(bool)
 
 		key, overwritten, err := api.Key().Rename(req.Context, name, newName, options.Key.Force(force))
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
-		cmds.EmitOnce(res, &KeyRenameOutput{
+		return cmds.EmitOnce(res, &KeyRenameOutput{
 			Was:       name,
 			Now:       newName,
 			Id:        key.ID().Pretty(),
@@ -215,11 +216,10 @@ var keyRmCmd = &cmds.Command{
 	Options: []cmdkit.Option{
 		cmdkit.BoolOption("l", "Show extra information about keys."),
 	},
-	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) {
+	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
 		api, err := cmdenv.GetApi(env)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
 		names := req.Arguments
@@ -228,14 +228,13 @@ var keyRmCmd = &cmds.Command{
 		for _, name := range names {
 			key, err := api.Key().Remove(req.Context, name)
 			if err != nil {
-				res.SetError(err, cmdkit.ErrNormal)
-				return
+				return err
 			}
 
 			list = append(list, KeyOutput{Name: name, Id: key.ID().Pretty()})
 		}
 
-		cmds.EmitOnce(res, &KeyOutputList{list})
+		return cmds.EmitOnce(res, &KeyOutputList{list})
 	},
 	Encoders: cmds.EncoderMap{
 		cmds.Text: keyOutputListMarshaler(),

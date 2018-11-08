@@ -10,16 +10,16 @@ import (
 	"time"
 
 	math2 "github.com/ipfs/go-ipfs/thirdparty/math2"
-	lgbl "gx/ipfs/QmZ4zF1mBrt8C2mSCM4ZYE4aAnv78f7GvrzufJC4G5tecK/go-libp2p-loggables"
+	lgbl "gx/ipfs/QmbP5E6C5Ks2b43vTZoyjSUHx2PPgoe78PZpJSJqCJ7LYx/go-libp2p-loggables"
 
-	inet "gx/ipfs/QmQSbtGXCyNrj34LWL8EgXyNNYDZ8r3SwQcpW5pPxVhLnM/go-libp2p-net"
-	peer "gx/ipfs/QmQsErDt8Qgw1XrsXf2BpEzDgGWtB1YLsTAARBup5b6B9W/go-libp2p-peer"
+	inet "gx/ipfs/QmRKbEchaYADxSCyyjhDh4cTrUby8ftXUb8MRLBTHQYupw/go-libp2p-net"
 	goprocess "gx/ipfs/QmSF8fPo3jgVBAy8fpdjjYqgG87dkJgUprRBHRd2tmfgpP/goprocess"
 	procctx "gx/ipfs/QmSF8fPo3jgVBAy8fpdjjYqgG87dkJgUprRBHRd2tmfgpP/goprocess/context"
 	periodicproc "gx/ipfs/QmSF8fPo3jgVBAy8fpdjjYqgG87dkJgUprRBHRd2tmfgpP/goprocess/periodic"
-	config "gx/ipfs/QmXUU23sGKdT7AHpyJ4aSvYpXbWjbiuYG1CYhZ3ai3btkG/go-ipfs-config"
-	pstore "gx/ipfs/QmeKD8YT7887Xu6Z86iZmpYNxrLogJexqxEugSmaf14k64/go-libp2p-peerstore"
-	host "gx/ipfs/QmfH9FKYv3Jp1xiyL8sPchGBUBg6JA6XviwajAo3qgnT3B/go-libp2p-host"
+	pstore "gx/ipfs/QmUymf8fJtideyv3z727BcZUifGBjMZMpCJqu3Gxk5aRUk/go-libp2p-peerstore"
+	host "gx/ipfs/QmVrjR2KMe57y4YyfHdYa3yKD278gN8W7CTiqSuYmxjA7F/go-libp2p-host"
+	config "gx/ipfs/QmbK4EmM2Xx5fmbqK38TGP3PpY66r3tkXLZTcc7dF9mFwM/go-ipfs-config"
+	peer "gx/ipfs/QmcqU6QUDSXprb1518vYDGczrTJTyGwLG9eUa5iNX4xUtS/go-libp2p-peer"
 )
 
 // ErrNotEnoughBootstrapPeers signals that we do not have enough bootstrap
@@ -117,7 +117,6 @@ func bootstrapRound(ctx context.Context, host host.Host, cfg BootstrapConfig) er
 	// get bootstrap peers from config. retrieving them here makes
 	// sure we remain observant of changes to client configuration.
 	peers := cfg.BootstrapPeers()
-
 	// determine how many bootstrap connections to open
 	connected := host.Network().Peers()
 	if len(connected) >= cfg.MinPeerThreshold {
@@ -139,6 +138,11 @@ func bootstrapRound(ctx context.Context, host host.Host, cfg BootstrapConfig) er
 	// if connected to all bootstrap peer candidates, exit
 	if len(notConnected) < 1 {
 		log.Debugf("%s no more bootstrap peers to create %d connections", id, numToDial)
+		if len(peers) == 0 {
+			// We *need* to bootstrap but we have no bootstrap peers
+			// configured *at all*, inform the user.
+			log.Error("no bootstrap nodes configured: go-ipfs may have difficulty connecting to the network")
+		}
 		return ErrNotEnoughBootstrapPeers
 	}
 

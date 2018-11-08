@@ -4,7 +4,7 @@ An IPFS Gateway acts as a bridge between traditional web browsers and IPFS.
 Through the gateway, users can browse files and websites stored in IPFS as if
 they were stored in a traditional web server.
 
-By default, go-ipfs nodes run a gateway at `http://127.0.0.1:5001/`.
+By default, go-ipfs nodes run a gateway at `http://127.0.0.1:8080/`.
 
 We also provide a public gateway at `https://ipfs.io`. If you've ever seen a
 link in the form `https://ipfs.io/ipfs/Qm...`, that's being served from *our*
@@ -46,3 +46,14 @@ your query string to explicitly specify the filename. For example:
 ## MIME-Types
 
 TODO
+
+## Read-Only API
+
+For convenience, the gateway exposes a read-only API. This read-only API exposes
+a read-only, "safe" subset of the normal API.
+
+For example, you use this to download a block:
+
+```
+> curl https://ipfs.io/api/v0/block/get/zb2rhi36Gc9GJWijLEL6zW45MBux5FcFv5gJmjXA7VAMozEXY
+```

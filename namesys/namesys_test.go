@@ -4,19 +4,18 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	opts "github.com/ipfs/go-ipfs/namesys/opts"
-	path "gx/ipfs/QmTKaiDxQqVxmA1bRipSuP7hnTSgnMSmEa98NYeS6fcoiv/go-path"
-	"gx/ipfs/QmVNEJ5Vk1e2G5kHMiuVbpD6VQZiK1oS6aWZKjcUQW7hEy/go-unixfs"
 
-	ipns "gx/ipfs/QmNqBhXpBKa5jcjoUZHfxDgAFxtqK3rDA5jtW811GBvVob/go-ipns"
-	ci "gx/ipfs/QmPvyPwuCgJ7pDmrKDxRtsScJgBaM5h4EpRL2qQJsmXf4n/go-libp2p-crypto"
-	peer "gx/ipfs/QmQsErDt8Qgw1XrsXf2BpEzDgGWtB1YLsTAARBup5b6B9W/go-libp2p-peer"
-	ds "gx/ipfs/QmVG5gxteQNEMhrS8prJSmU2C9rebtFuTd3SYZ5kE3YZ5k/go-datastore"
-	dssync "gx/ipfs/QmVG5gxteQNEMhrS8prJSmU2C9rebtFuTd3SYZ5kE3YZ5k/go-datastore/sync"
-	offroute "gx/ipfs/QmZdn8S4FLTfDrmLZb7JoLkrRvTYnyuMWEG6ZGZ3YKwEiK/go-ipfs-routing/offline"
-	pstore "gx/ipfs/QmeKD8YT7887Xu6Z86iZmpYNxrLogJexqxEugSmaf14k64/go-libp2p-peerstore"
+	ci "gx/ipfs/QmNiJiXwWE3kRhZrC5ej3kSjWHm337pYfhjLGSCDNKJP2s/go-libp2p-crypto"
+	offroute "gx/ipfs/QmNuVissmH2ftUd4ADvhm9WER3351wTYduY1EeDDGtP1tM/go-ipfs-routing/offline"
+	path "gx/ipfs/QmRG3XuGwT7GYuAqgWDJBKTzdaHMwAnc1x7J2KHEXNHxzG/go-path"
+	pstoremem "gx/ipfs/QmUymf8fJtideyv3z727BcZUifGBjMZMpCJqu3Gxk5aRUk/go-libp2p-peerstore/pstoremem"
+	"gx/ipfs/QmXLCwhHh7bxRsBnCKNE9BAN87V44aSxXLquZYTtjr6fZ3/go-unixfs"
+	ipns "gx/ipfs/QmZMJfrt7fU33oFQ9WvWnovhiiZ8T6qkWkFXNCFreJTzgT/go-ipns"
+	ds "gx/ipfs/QmaRb5yNXKonhbkpNxNawoydk4N6es6b4fPj19sjEKsh5D/go-datastore"
+	dssync "gx/ipfs/QmaRb5yNXKonhbkpNxNawoydk4N6es6b4fPj19sjEKsh5D/go-datastore/sync"
+	peer "gx/ipfs/QmcqU6QUDSXprb1518vYDGczrTJTyGwLG9eUa5iNX4xUtS/go-libp2p-peer"
 )
 
 type mockResolver struct {
@@ -38,9 +37,12 @@ func testResolution(t *testing.T, resolver Resolver, name string, depth uint, ex
 	}
 }
 
-func (r *mockResolver) resolveOnce(ctx context.Context, name string, opts *opts.ResolveOpts) (path.Path, time.Duration, error) {
+func (r *mockResolver) resolveOnceAsync(ctx context.Context, name string, options opts.ResolveOpts) <-chan onceResult {
 	p, err := path.ParsePath(r.entries[name])
-	return p, 0, err
+	out := make(chan onceResult, 1)
+	out <- onceResult{value: p, err: err}
+	close(out)
+	return out
 }
 
 func mockResolverOne() *mockResolver {
@@ -86,7 +88,7 @@ func TestPublishWithCache0(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ps := pstore.NewPeerstore()
+	ps := pstoremem.NewPeerstore()
 	pid, err := peer.IDFromPrivateKey(priv)
 	if err != nil {
 		t.Fatal(err)

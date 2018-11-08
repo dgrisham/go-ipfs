@@ -7,8 +7,8 @@ import (
 	"github.com/ipfs/go-ipfs/core"
 	coreiface "github.com/ipfs/go-ipfs/core/coreapi/interface"
 
-	cmds "gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds"
-	config "gx/ipfs/QmXUU23sGKdT7AHpyJ4aSvYpXbWjbiuYG1CYhZ3ai3btkG/go-ipfs-config"
+	cmds "gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds"
+	config "gx/ipfs/QmbK4EmM2Xx5fmbqK38TGP3PpY66r3tkXLZTcc7dF9mFwM/go-ipfs-config"
 )
 
 // GetNode extracts the node from the environment.
@@ -39,4 +39,14 @@ func GetConfig(env cmds.Environment) (*config.Config, error) {
 	}
 
 	return ctx.GetConfig()
+}
+
+// GetConfigRoot extracts the config root from the environment
+func GetConfigRoot(env cmds.Environment) (string, error) {
+	ctx, ok := env.(*commands.Context)
+	if !ok {
+		return "", fmt.Errorf("expected env to be of type %T, got %T", ctx, env)
+	}
+
+	return ctx.ConfigRoot, nil
 }

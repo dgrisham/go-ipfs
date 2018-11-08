@@ -14,10 +14,10 @@ import (
 	"github.com/ipfs/go-ipfs/core"
 	corecommands "github.com/ipfs/go-ipfs/core/commands"
 
-	cmds "gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds"
-	cmdsHttp "gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds/http"
-	path "gx/ipfs/QmTKaiDxQqVxmA1bRipSuP7hnTSgnMSmEa98NYeS6fcoiv/go-path"
-	config "gx/ipfs/QmXUU23sGKdT7AHpyJ4aSvYpXbWjbiuYG1CYhZ3ai3btkG/go-ipfs-config"
+	path "gx/ipfs/QmRG3XuGwT7GYuAqgWDJBKTzdaHMwAnc1x7J2KHEXNHxzG/go-path"
+	cmds "gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds"
+	cmdsHttp "gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds/http"
+	config "gx/ipfs/QmbK4EmM2Xx5fmbqK38TGP3PpY66r3tkXLZTcc7dF9mFwM/go-ipfs-config"
 )
 
 var (
@@ -30,12 +30,8 @@ This functionality is deprecated, and will be removed in future versions.
 Instead, try either adding headers to the config, or passing them via
 cli arguments:
 
-	ipfs config API.HTTPHeaders 'Access-Control-Allow-Origin' '*'
+	ipfs config API.HTTPHeaders --json '{"Access-Control-Allow-Origin": ["*"]}'
 	ipfs daemon
-
-or
-
-	ipfs daemon --api-http-header 'Access-Control-Allow-Origin: *'
 `
 
 // APIPath is the path at which the API is mounted.

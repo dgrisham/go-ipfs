@@ -24,17 +24,17 @@ import (
 	repo "github.com/ipfs/go-ipfs/repo"
 	fsrepo "github.com/ipfs/go-ipfs/repo/fsrepo"
 
-	"gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds"
-	"gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds/cli"
-	"gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds/http"
-	u "gx/ipfs/QmPdKqUcHGFdeSpvjVoaTRPPstGif9GBZb5Q56RVw9o69A/go-ipfs-util"
-	logging "gx/ipfs/QmRREK2CAZ5Re2Bd9zZFG6FeYDppUWt5cMgsoUEp3ktgSr/go-log"
-	manet "gx/ipfs/QmV6FjemM1K8oXjrvuq3wuVWWoU2TLDPmNnKrxHzY3v6Ai/go-multiaddr-net"
-	"gx/ipfs/QmXUU23sGKdT7AHpyJ4aSvYpXbWjbiuYG1CYhZ3ai3btkG/go-ipfs-config"
+	u "gx/ipfs/QmNohiVssaPw3KVLZik59DBVGTSm2dGvYT9eoXt5DQ36Yz/go-ipfs-util"
+	manet "gx/ipfs/QmQVUtnrNGtCRkCMpXgpApfzQjc8FDaDVxHqWH8cnZQeh5/go-multiaddr-net"
+	ma "gx/ipfs/QmRKLtwMw131aK7ugC3G7ybpumMz78YrJe5dzneyindvG1/go-multiaddr"
+	madns "gx/ipfs/QmT4zgnKCyZBpRyxzsvZqUjzUkMWLJ2pZCw7uk6M6Kto5m/go-multiaddr-dns"
 	osh "gx/ipfs/QmXuBJ7DR6k3rmUEKtvVMhwjmXDuJgXXPUt4LQXKBMsU93/go-os-helper"
-	ma "gx/ipfs/QmYmsdtJ3HsodkePE3eU3TsCaP2YvPZJ4LoXnNkDE5Tpt7/go-multiaddr"
-	loggables "gx/ipfs/QmZ4zF1mBrt8C2mSCM4ZYE4aAnv78f7GvrzufJC4G5tecK/go-libp2p-loggables"
-	madns "gx/ipfs/QmfXU2MhWoegxHoeMd3A2ytL2P6CY4FfqGWc23LTNWBwZt/go-multiaddr-dns"
+	"gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds"
+	"gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds/cli"
+	"gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds/http"
+	"gx/ipfs/QmbK4EmM2Xx5fmbqK38TGP3PpY66r3tkXLZTcc7dF9mFwM/go-ipfs-config"
+	loggables "gx/ipfs/QmbP5E6C5Ks2b43vTZoyjSUHx2PPgoe78PZpJSJqCJ7LYx/go-libp2p-loggables"
+	logging "gx/ipfs/QmcuXC5cxs79ro2cUuHs4HQ2bkDLJUYokwL8aivcX6HW3C/go-log"
 )
 
 // log is the command logger
@@ -82,12 +82,25 @@ func mainRet() int {
 	intrh, ctx := setupInterruptHandler(ctx)
 	defer intrh.Close()
 
-	// Handle `ipfs help'
-	if len(os.Args) == 2 {
-		if os.Args[1] == "help" {
-			os.Args[1] = "-h"
-		} else if os.Args[1] == "--version" {
+	// Handle `ipfs version` or `ipfs help`
+	if len(os.Args) > 1 {
+		// Handle `ipfs --version'
+		if os.Args[1] == "--version" {
 			os.Args[1] = "version"
+		}
+
+		//Handle `ipfs help` and `ipfs help <sub-command>`
+		if os.Args[1] == "help" {
+			if len(os.Args) > 2 {
+				os.Args = append(os.Args[:1], os.Args[2:]...)
+				// Handle `ipfs help --help`
+				// append `--help`,when the command is not `ipfs help --help`
+				if os.Args[1] != "--help" {
+					os.Args = append(os.Args, "--help")
+				}
+			} else {
+				os.Args[1] = "--help"
+			}
 		}
 	}
 
@@ -174,10 +187,11 @@ func makeExecutor(req *cmds.Request, env interface{}) (cmds.Executor, error) {
 		if err != nil {
 			return nil, err
 		}
-		if ok {
-			if _, err := loader.LoadPlugins(pluginpath); err != nil {
-				log.Error("error loading plugins: ", err)
-			}
+		if !ok {
+			pluginpath = ""
+		}
+		if _, err := loader.LoadPlugins(pluginpath); err != nil {
+			log.Error("error loading plugins: ", err)
 		}
 
 		exctr = cmds.NewExecutor(req.Root)

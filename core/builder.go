@@ -14,27 +14,27 @@ import (
 	repo "github.com/ipfs/go-ipfs/repo"
 	cidv0v1 "github.com/ipfs/go-ipfs/thirdparty/cidv0v1"
 	"github.com/ipfs/go-ipfs/thirdparty/verifbs"
-	dag "gx/ipfs/QmRDaC5z6yXkXTTSWzaxs2sSVBon5RRCN6eNtMmpuHtKCr/go-merkledag"
-	resolver "gx/ipfs/QmTKaiDxQqVxmA1bRipSuP7hnTSgnMSmEa98NYeS6fcoiv/go-path/resolver"
-	uio "gx/ipfs/QmVNEJ5Vk1e2G5kHMiuVbpD6VQZiK1oS6aWZKjcUQW7hEy/go-unixfs/io"
-	bsengine "gx/ipfs/Qmd8rU7X3VZzsgPnf2LSGUFu35zizYKajzXTRuHMUMqYJQ/go-bitswap/decision"
-	bserv "gx/ipfs/QmdHqV7L4bpmMtEXVCrgn8RN6CXqMr3aUeogSkXbJGRtwk/go-blockservice"
+	resolver "gx/ipfs/QmRG3XuGwT7GYuAqgWDJBKTzdaHMwAnc1x7J2KHEXNHxzG/go-path/resolver"
+	bserv "gx/ipfs/QmVPeMNK9DfGLXDZzs2W4RoFWC9Zq1EnLGmLXtYtWrNdcW/go-blockservice"
+	uio "gx/ipfs/QmXLCwhHh7bxRsBnCKNE9BAN87V44aSxXLquZYTtjr6fZ3/go-unixfs/io"
+	dag "gx/ipfs/QmaDBne4KeY3UepeqSVKYpSmQGa3q9zP6x3LfVF2UjF3Hc/go-merkledag"
 
-	ipns "gx/ipfs/QmNqBhXpBKa5jcjoUZHfxDgAFxtqK3rDA5jtW811GBvVob/go-ipns"
-	ci "gx/ipfs/QmPvyPwuCgJ7pDmrKDxRtsScJgBaM5h4EpRL2qQJsmXf4n/go-libp2p-crypto"
-	peer "gx/ipfs/QmQsErDt8Qgw1XrsXf2BpEzDgGWtB1YLsTAARBup5b6B9W/go-libp2p-peer"
+	ci "gx/ipfs/QmNiJiXwWE3kRhZrC5ej3kSjWHm337pYfhjLGSCDNKJP2s/go-libp2p-crypto"
+	offline "gx/ipfs/QmPpnbwgAuvhUkA9jGooR88ZwZtTUHXXvoQNKdjZC6nYku/go-ipfs-exchange-offline"
 	goprocessctx "gx/ipfs/QmSF8fPo3jgVBAy8fpdjjYqgG87dkJgUprRBHRd2tmfgpP/goprocess/context"
-	ds "gx/ipfs/QmVG5gxteQNEMhrS8prJSmU2C9rebtFuTd3SYZ5kE3YZ5k/go-datastore"
-	retry "gx/ipfs/QmVG5gxteQNEMhrS8prJSmU2C9rebtFuTd3SYZ5kE3YZ5k/go-datastore/retrystore"
-	dsync "gx/ipfs/QmVG5gxteQNEMhrS8prJSmU2C9rebtFuTd3SYZ5kE3YZ5k/go-datastore/sync"
-	cfg "gx/ipfs/QmXUU23sGKdT7AHpyJ4aSvYpXbWjbiuYG1CYhZ3ai3btkG/go-ipfs-config"
-	offline "gx/ipfs/QmZxjqR9Qgompju73kakSoUj3rbVndAzky3oCDiBNCxPs1/go-ipfs-exchange-offline"
-	bstore "gx/ipfs/QmcmpX42gtDv1fz24kau4wjS9hfwWj5VexWBKgGnWzsyag/go-ipfs-blockstore"
-	record "gx/ipfs/QmdHb9aBELnQKTVhvvA3hsQbRgUAwsWUzBP2vZ6Y5FBYvE/go-libp2p-record"
-	pstore "gx/ipfs/QmeKD8YT7887Xu6Z86iZmpYNxrLogJexqxEugSmaf14k64/go-libp2p-peerstore"
+	bstore "gx/ipfs/QmSNLNnL3kq3A1NGdQA9AtgxM9CWKiiSEup3W435jCkRQS/go-ipfs-blockstore"
+	record "gx/ipfs/QmSoeYGNm8v8jAF49hX7UwHwkXjoeobSrn9sya5NPPsxXP/go-libp2p-record"
+	pstore "gx/ipfs/QmUymf8fJtideyv3z727BcZUifGBjMZMpCJqu3Gxk5aRUk/go-libp2p-peerstore"
+	pstoremem "gx/ipfs/QmUymf8fJtideyv3z727BcZUifGBjMZMpCJqu3Gxk5aRUk/go-libp2p-peerstore/pstoremem"
+	p2phost "gx/ipfs/QmVrjR2KMe57y4YyfHdYa3yKD278gN8W7CTiqSuYmxjA7F/go-libp2p-host"
+	libp2p "gx/ipfs/QmXnpYYg2onGLXVxM4Q5PEFcx29k8zeJQkPeLAk9h9naxg/go-libp2p"
+	ipns "gx/ipfs/QmZMJfrt7fU33oFQ9WvWnovhiiZ8T6qkWkFXNCFreJTzgT/go-ipns"
+	ds "gx/ipfs/QmaRb5yNXKonhbkpNxNawoydk4N6es6b4fPj19sjEKsh5D/go-datastore"
+	retry "gx/ipfs/QmaRb5yNXKonhbkpNxNawoydk4N6es6b4fPj19sjEKsh5D/go-datastore/retrystore"
+	dsync "gx/ipfs/QmaRb5yNXKonhbkpNxNawoydk4N6es6b4fPj19sjEKsh5D/go-datastore/sync"
+	cfg "gx/ipfs/QmbK4EmM2Xx5fmbqK38TGP3PpY66r3tkXLZTcc7dF9mFwM/go-ipfs-config"
+	peer "gx/ipfs/QmcqU6QUDSXprb1518vYDGczrTJTyGwLG9eUa5iNX4xUtS/go-libp2p-peer"
 	metrics "gx/ipfs/QmekzFM3hPZjTjUFGTABdQkEnQ3PTiMstY198PwSFr5w1Q/go-metrics-interface"
-	libp2p "gx/ipfs/Qmf1u2efhjXYtuyP8SMHYtw4dCkbghnniex2PSp7baA7FP/go-libp2p"
-	p2phost "gx/ipfs/QmfH9FKYv3Jp1xiyL8sPchGBUBg6JA6XviwajAo3qgnT3B/go-libp2p-host"
 )
 
 type BuildCfg struct {
@@ -143,7 +143,7 @@ func NewNode(ctx context.Context, cfg *BuildCfg) (*IpfsNode, error) {
 		mode:      offlineMode,
 		Repo:      cfg.Repo,
 		ctx:       ctx,
-		Peerstore: pstore.NewPeerstore(),
+		Peerstore: pstoremem.NewPeerstore(),
 	}
 
 	n.RecordValidator = record.NamespacedValidator{
@@ -206,22 +206,24 @@ func setupNode(ctx context.Context, n *IpfsNode, cfg *BuildCfg) error {
 		opts.HasBloomFilterSize = 0
 	}
 
-	wbs, err := bstore.CachedBlockstore(ctx, bs, opts)
-	if err != nil {
-		return err
+	if !cfg.NilRepo {
+		bs, err = bstore.CachedBlockstore(ctx, bs, opts)
+		if err != nil {
+			return err
+		}
 	}
 
-	wbs = bstore.NewIdStore(wbs)
+	bs = bstore.NewIdStore(bs)
 
-	wbs = cidv0v1.NewBlockstore(wbs)
+	bs = cidv0v1.NewBlockstore(bs)
 
-	n.BaseBlocks = wbs
+	n.BaseBlocks = bs
 	n.GCLocker = bstore.NewGCLocker()
-	n.Blockstore = bstore.NewGCBlockstore(wbs, n.GCLocker)
+	n.Blockstore = bstore.NewGCBlockstore(bs, n.GCLocker)
 
 	if conf.Experimental.FilestoreEnabled || conf.Experimental.UrlstoreEnabled {
 		// hash security
-		n.Filestore = filestore.NewFilestore(wbs, n.Repo.FileManager())
+		n.Filestore = filestore.NewFilestore(bs, n.Repo.FileManager())
 		n.Blockstore = bstore.NewGCBlockstore(n.Filestore, n.GCLocker)
 		n.Blockstore = &verifbs.VerifBSGC{GCBlockstore: n.Blockstore}
 	}
@@ -233,15 +235,6 @@ func setupNode(ctx context.Context, n *IpfsNode, cfg *BuildCfg) error {
 
 	if rcfg.Datastore.HashOnRead {
 		bs.HashOnRead(true)
-	}
-
-	// TODO: not sure if this goes here
-	var bsRRQCfg *bsengine.RRQConfig = nil
-	if conf.Experimental.BitswapStrategyEnabled {
-		bsRRQCfg = &bsengine.RRQConfig{
-			RoundBurst: conf.Experimental.BitswapRRQRoundBurst,
-			Strategy:   getStrategyFunc(conf.Experimental.BitswapStrategy),
-		}
 	}
 
 	hostOption := cfg.Host
@@ -256,7 +249,7 @@ func setupNode(ctx context.Context, n *IpfsNode, cfg *BuildCfg) error {
 
 	if cfg.Online {
 		do := setupDiscoveryOption(rcfg.Discovery)
-		if err := n.startOnlineServices(ctx, cfg.Routing, bsRRQCfg, hostOption, do, cfg.getOpt("pubsub"), cfg.getOpt("ipnsps"), cfg.getOpt("mplex")); err != nil {
+		if err := n.startOnlineServices(ctx, cfg.Routing, hostOption, do, cfg.getOpt("pubsub"), cfg.getOpt("ipnsps"), cfg.getOpt("mplex")); err != nil {
 			return err
 		}
 	} else {

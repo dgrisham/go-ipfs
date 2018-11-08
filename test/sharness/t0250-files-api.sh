@@ -260,6 +260,13 @@ test_files_api() {
     verify_dir_contents /cats/this/is/a/dir
   '
 
+  test_expect_success "dir has correct name" '
+    DIR_HASH=$(ipfs files stat /cats/this --hash) &&
+    echo "this/	$DIR_HASH	0" > ls_dir_expected &&
+    ipfs files ls -l /cats | grep this/ > ls_dir_actual &&
+    test_cmp ls_dir_expected ls_dir_actual
+  '
+
   test_expect_success "can copy file into new dir $EXTRA" '
     ipfs files cp /ipfs/$FILE3 /cats/this/is/a/dir/file3
   '
@@ -628,6 +635,20 @@ test_files_api() {
 
   test_expect_success "repo gc $EXTRA" '
     ipfs repo gc
+  '
+
+  # test rm
+
+  test_expect_success "remove file forcibly" '
+    echo "hello world" | ipfs files write --create /forcibly &&
+    ipfs files rm --force /forcibly &&
+    verify_dir_contents /
+  '
+
+  test_expect_success "remove directory forcibly" '
+    ipfs files mkdir /forcibly-dir &&
+    ipfs files rm --force /forcibly-dir &&
+    verify_dir_contents /
   '
 }
 

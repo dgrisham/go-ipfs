@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	ma "gx/ipfs/QmYmsdtJ3HsodkePE3eU3TsCaP2YvPZJ4LoXnNkDE5Tpt7/go-multiaddr"
-	madns "gx/ipfs/QmfXU2MhWoegxHoeMd3A2ytL2P6CY4FfqGWc23LTNWBwZt/go-multiaddr-dns"
+	ma "gx/ipfs/QmRKLtwMw131aK7ugC3G7ybpumMz78YrJe5dzneyindvG1/go-multiaddr"
+	madns "gx/ipfs/QmT4zgnKCyZBpRyxzsvZqUjzUkMWLJ2pZCw7uk6M6Kto5m/go-multiaddr-dns"
 )
 
 var (

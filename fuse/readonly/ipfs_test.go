@@ -14,17 +14,18 @@ import (
 	"testing"
 
 	core "github.com/ipfs/go-ipfs/core"
-	coreunix "github.com/ipfs/go-ipfs/core/coreunix"
+	coreapi "github.com/ipfs/go-ipfs/core/coreapi"
+	iface "github.com/ipfs/go-ipfs/core/coreapi/interface"
 	coremock "github.com/ipfs/go-ipfs/core/mock"
-	dag "gx/ipfs/QmRDaC5z6yXkXTTSWzaxs2sSVBon5RRCN6eNtMmpuHtKCr/go-merkledag"
-	importer "gx/ipfs/QmVNEJ5Vk1e2G5kHMiuVbpD6VQZiK1oS6aWZKjcUQW7hEy/go-unixfs/importer"
-	uio "gx/ipfs/QmVNEJ5Vk1e2G5kHMiuVbpD6VQZiK1oS6aWZKjcUQW7hEy/go-unixfs/io"
 
-	u "gx/ipfs/QmPdKqUcHGFdeSpvjVoaTRPPstGif9GBZb5Q56RVw9o69A/go-ipfs-util"
-	ci "gx/ipfs/QmRNhSdqzMcuRxX9A1egBeQ3BhDTguDV5HPwi8wRykkPU8/go-testutil/ci"
+	u "gx/ipfs/QmNohiVssaPw3KVLZik59DBVGTSm2dGvYT9eoXt5DQ36Yz/go-ipfs-util"
+	chunker "gx/ipfs/QmR4QQVkBZsZENRjYFVi8dEtPL3daZRNKk24m4r6WKJHNm/go-ipfs-chunker"
 	fstest "gx/ipfs/QmSJBsmLP1XMjv8hxYg2rUMdPDB7YUpyBo9idjrJ6Cmq6F/fuse/fs/fstestutil"
-	ipld "gx/ipfs/QmX5CsuHyVZeTLxgRSYkgLSDQKb9UjE8xnhQzCEJWWWFsC/go-ipld-format"
-	chunker "gx/ipfs/QmXzBbJo2sLf3uwjNTeoWYiJV7CjAhkiA4twtLvwJSSNdK/go-ipfs-chunker"
+	importer "gx/ipfs/QmXLCwhHh7bxRsBnCKNE9BAN87V44aSxXLquZYTtjr6fZ3/go-unixfs/importer"
+	uio "gx/ipfs/QmXLCwhHh7bxRsBnCKNE9BAN87V44aSxXLquZYTtjr6fZ3/go-unixfs/io"
+	ci "gx/ipfs/QmZXjR5X1p4KrQ967cTsy4MymMzUM8mZECF3PV8UcN4o3g/go-testutil/ci"
+	dag "gx/ipfs/QmaDBne4KeY3UepeqSVKYpSmQGa3q9zP6x3LfVF2UjF3Hc/go-merkledag"
+	ipld "gx/ipfs/QmcKKBwfz6FyQdHR2jsXrrF6XeSBXYL86anmWNewpFpoF5/go-ipld-format"
 )
 
 func maybeSkipFuseTests(t *testing.T) {
@@ -116,6 +117,8 @@ func TestIpfsStressRead(t *testing.T) {
 	nd, mnt := setupIpfsTest(t, nil)
 	defer mnt.Close()
 
+	api := coreapi.NewCoreAPI(nd)
+
 	var nodes []ipld.Node
 	var paths []string
 
@@ -165,14 +168,14 @@ func TestIpfsStressRead(t *testing.T) {
 			defer wg.Done()
 
 			for i := 0; i < 2000; i++ {
-				item := paths[rand.Intn(len(paths))]
-				fname := path.Join(mnt.Dir, item)
+				item, _ := iface.ParsePath(paths[rand.Intn(len(paths))])
+				fname := path.Join(mnt.Dir, item.String())
 				rbuf, err := ioutil.ReadFile(fname)
 				if err != nil {
 					errs <- err
 				}
 
-				read, err := coreunix.Cat(nd.Context(), nd, item)
+				read, err := api.Unixfs().Get(nd.Context(), item)
 				if err != nil {
 					errs <- err
 				}

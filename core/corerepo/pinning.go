@@ -18,28 +18,21 @@ import (
 	"fmt"
 
 	"github.com/ipfs/go-ipfs/core"
-	path "gx/ipfs/QmTKaiDxQqVxmA1bRipSuP7hnTSgnMSmEa98NYeS6fcoiv/go-path"
-	resolver "gx/ipfs/QmTKaiDxQqVxmA1bRipSuP7hnTSgnMSmEa98NYeS6fcoiv/go-path/resolver"
-	uio "gx/ipfs/QmVNEJ5Vk1e2G5kHMiuVbpD6VQZiK1oS6aWZKjcUQW7hEy/go-unixfs/io"
+	"github.com/ipfs/go-ipfs/core/coreapi/interface"
 
-	cid "gx/ipfs/QmZFbDTY9jfSBms2MchvYM9oYRbAF19K7Pby47yDBfpPrb/go-cid"
+	"gx/ipfs/QmR8BauakNcBa3RbE4nbQu76PDiJgoQgz8AJdhJuiU4TAw/go-cid"
 )
 
-func Pin(n *core.IpfsNode, ctx context.Context, paths []string, recursive bool) ([]*cid.Cid, error) {
-	out := make([]*cid.Cid, len(paths))
-
-	r := &resolver.Resolver{
-		DAG:         n.DAG,
-		ResolveOnce: uio.ResolveUnixfsOnce,
-	}
+func Pin(n *core.IpfsNode, api iface.CoreAPI, ctx context.Context, paths []string, recursive bool) ([]cid.Cid, error) {
+	out := make([]cid.Cid, len(paths))
 
 	for i, fpath := range paths {
-		p, err := path.ParsePath(fpath)
+		p, err := iface.ParsePath(fpath)
 		if err != nil {
 			return nil, err
 		}
 
-		dagnode, err := core.Resolve(ctx, n.Namesys, r, p)
+		dagnode, err := api.ResolveNode(ctx, p)
 		if err != nil {
 			return nil, fmt.Errorf("pin: %s", err)
 		}
@@ -58,30 +51,25 @@ func Pin(n *core.IpfsNode, ctx context.Context, paths []string, recursive bool) 
 	return out, nil
 }
 
-func Unpin(n *core.IpfsNode, ctx context.Context, paths []string, recursive bool) ([]*cid.Cid, error) {
-	unpinned := make([]*cid.Cid, len(paths))
-
-	r := &resolver.Resolver{
-		DAG:         n.DAG,
-		ResolveOnce: uio.ResolveUnixfsOnce,
-	}
+func Unpin(n *core.IpfsNode, api iface.CoreAPI, ctx context.Context, paths []string, recursive bool) ([]cid.Cid, error) {
+	unpinned := make([]cid.Cid, len(paths))
 
 	for i, p := range paths {
-		p, err := path.ParsePath(p)
+		p, err := iface.ParsePath(p)
 		if err != nil {
 			return nil, err
 		}
 
-		k, err := core.ResolveToCid(ctx, n.Namesys, r, p)
+		k, err := api.ResolvePath(ctx, p)
 		if err != nil {
 			return nil, err
 		}
 
-		err = n.Pinning.Unpin(ctx, k, recursive)
+		err = n.Pinning.Unpin(ctx, k.Cid(), recursive)
 		if err != nil {
 			return nil, err
 		}
-		unpinned[i] = k
+		unpinned[i] = k.Cid()
 	}
 
 	err := n.Pinning.Flush()

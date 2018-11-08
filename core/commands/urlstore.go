@@ -8,14 +8,14 @@ import (
 	cmdenv "github.com/ipfs/go-ipfs/core/commands/cmdenv"
 	filestore "github.com/ipfs/go-ipfs/filestore"
 
-	cmds "gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds"
-	mh "gx/ipfs/QmPnFwZ2JXKnXgMw8CdBPxn7FWh6LLdjUjxV1fKHuJnkr8/go-multihash"
-	cmdkit "gx/ipfs/QmSP88ryZkHSRn1fnngAaV2Vcn63WUJzAavnRM9CVdU1Ky/go-ipfs-cmdkit"
-	balanced "gx/ipfs/QmVNEJ5Vk1e2G5kHMiuVbpD6VQZiK1oS6aWZKjcUQW7hEy/go-unixfs/importer/balanced"
-	ihelper "gx/ipfs/QmVNEJ5Vk1e2G5kHMiuVbpD6VQZiK1oS6aWZKjcUQW7hEy/go-unixfs/importer/helpers"
-	trickle "gx/ipfs/QmVNEJ5Vk1e2G5kHMiuVbpD6VQZiK1oS6aWZKjcUQW7hEy/go-unixfs/importer/trickle"
-	chunk "gx/ipfs/QmXzBbJo2sLf3uwjNTeoWYiJV7CjAhkiA4twtLvwJSSNdK/go-ipfs-chunker"
-	cid "gx/ipfs/QmZFbDTY9jfSBms2MchvYM9oYRbAF19K7Pby47yDBfpPrb/go-cid"
+	chunk "gx/ipfs/QmR4QQVkBZsZENRjYFVi8dEtPL3daZRNKk24m4r6WKJHNm/go-ipfs-chunker"
+	cid "gx/ipfs/QmR8BauakNcBa3RbE4nbQu76PDiJgoQgz8AJdhJuiU4TAw/go-cid"
+	balanced "gx/ipfs/QmXLCwhHh7bxRsBnCKNE9BAN87V44aSxXLquZYTtjr6fZ3/go-unixfs/importer/balanced"
+	ihelper "gx/ipfs/QmXLCwhHh7bxRsBnCKNE9BAN87V44aSxXLquZYTtjr6fZ3/go-unixfs/importer/helpers"
+	trickle "gx/ipfs/QmXLCwhHh7bxRsBnCKNE9BAN87V44aSxXLquZYTtjr6fZ3/go-unixfs/importer/trickle"
+	cmds "gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds"
+	cmdkit "gx/ipfs/Qmde5VP1qUkyQXKCfmEUA7bP64V2HAptbJ7phuPp7jXWwg/go-ipfs-cmdkit"
+	mh "gx/ipfs/QmerPMzPk1mJVowm8KgmoknWa4yCYvvugMPsgWmDNUvDLW/go-multihash"
 )
 
 var urlStoreCmd = &cmds.Command{
@@ -50,48 +50,41 @@ time.
 	Arguments: []cmdkit.Argument{
 		cmdkit.StringArg("url", true, false, "URL to add to IPFS"),
 	},
-	Type: BlockStat{},
+	Type: &BlockStat{},
 
-	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) {
+	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
 		url := req.Arguments[0]
 		n, err := cmdenv.GetNode(env)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
 		if !filestore.IsURL(url) {
-			res.SetError(fmt.Errorf("unsupported url syntax: %s", url), cmdkit.ErrNormal)
-			return
+			return fmt.Errorf("unsupported url syntax: %s", url)
 		}
 
 		cfg, err := n.Repo.Config()
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
 		if !cfg.Experimental.UrlstoreEnabled {
-			res.SetError(filestore.ErrUrlstoreNotEnabled, cmdkit.ErrNormal)
-			return
+			return filestore.ErrUrlstoreNotEnabled
 		}
 
 		useTrickledag, _ := req.Options[trickleOptionName].(bool)
 
 		hreq, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
 		hres, err := http.DefaultClient.Do(hreq)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 		if hres.StatusCode != http.StatusOK {
-			res.SetError(fmt.Errorf("expected code 200, got: %d", hres.StatusCode), cmdkit.ErrNormal)
-			return
+			return fmt.Errorf("expected code 200, got: %d", hres.StatusCode)
 		}
 
 		chk := chunk.NewSizeSplitter(hres.Body, chunk.DefaultBlockSize)
@@ -111,11 +104,10 @@ time.
 		}
 		root, err := layout(dbp.New(chk))
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
-		cmds.EmitOnce(res, BlockStat{
+		return cmds.EmitOnce(res, &BlockStat{
 			Key:  root.Cid().String(),
 			Size: int(hres.ContentLength),
 		})

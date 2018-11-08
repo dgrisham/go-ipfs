@@ -11,17 +11,18 @@ import (
 	"testing"
 	"time"
 
-	random "github.com/ipfs/go-ipfs/Godeps/_workspace/src/github.com/jbenet/go-random"
-
 	"github.com/ipfs/go-ipfs/core"
+	"github.com/ipfs/go-ipfs/core/coreapi"
+	"github.com/ipfs/go-ipfs/core/coreapi/interface"
 	coreunix "github.com/ipfs/go-ipfs/core/coreunix"
 	mock "github.com/ipfs/go-ipfs/core/mock"
 	"github.com/ipfs/go-ipfs/thirdparty/unit"
 
-	testutil "gx/ipfs/QmRNhSdqzMcuRxX9A1egBeQ3BhDTguDV5HPwi8wRykkPU8/go-testutil"
-	logging "gx/ipfs/QmRREK2CAZ5Re2Bd9zZFG6FeYDppUWt5cMgsoUEp3ktgSr/go-log"
-	pstore "gx/ipfs/QmeKD8YT7887Xu6Z86iZmpYNxrLogJexqxEugSmaf14k64/go-libp2p-peerstore"
-	mocknet "gx/ipfs/Qmf1u2efhjXYtuyP8SMHYtw4dCkbghnniex2PSp7baA7FP/go-libp2p/p2p/net/mock"
+	random "gx/ipfs/QmSJ9n2s9NUoA9D849W5jj5SJ94nMcZpj1jCgQJieiNqSt/go-random"
+	pstore "gx/ipfs/QmUymf8fJtideyv3z727BcZUifGBjMZMpCJqu3Gxk5aRUk/go-libp2p-peerstore"
+	mocknet "gx/ipfs/QmXnpYYg2onGLXVxM4Q5PEFcx29k8zeJQkPeLAk9h9naxg/go-libp2p/p2p/net/mock"
+	testutil "gx/ipfs/QmZXjR5X1p4KrQ967cTsy4MymMzUM8mZECF3PV8UcN4o3g/go-testutil"
+	logging "gx/ipfs/QmcuXC5cxs79ro2cUuHs4HQ2bkDLJUYokwL8aivcX6HW3C/go-log"
 )
 
 var log = logging.Logger("epictest")
@@ -119,6 +120,8 @@ func DirectAddCat(data []byte, conf testutil.LatencyConfig) error {
 	}
 	defer catter.Close()
 
+	catterApi := coreapi.NewCoreAPI(catter)
+
 	err = mn.LinkAll()
 	if err != nil {
 		return err
@@ -139,7 +142,12 @@ func DirectAddCat(data []byte, conf testutil.LatencyConfig) error {
 		return err
 	}
 
-	readerCatted, err := coreunix.Cat(ctx, catter, added)
+	ap, err := iface.ParsePath(added)
+	if err != nil {
+		return err
+	}
+
+	readerCatted, err := catterApi.Unixfs().Get(ctx, ap)
 	if err != nil {
 		return err
 	}

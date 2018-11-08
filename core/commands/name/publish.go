@@ -1,22 +1,32 @@
 package name
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
 	"time"
 
-	core "github.com/ipfs/go-ipfs/core"
 	cmdenv "github.com/ipfs/go-ipfs/core/commands/cmdenv"
 	e "github.com/ipfs/go-ipfs/core/commands/e"
-	keystore "github.com/ipfs/go-ipfs/keystore"
+	iface "github.com/ipfs/go-ipfs/core/coreapi/interface"
+	options "github.com/ipfs/go-ipfs/core/coreapi/interface/options"
 
-	"gx/ipfs/QmPTfgFTo9PFr1PvPKyKoeMgBvYPh6cX3aDP7DHKVbnCbi/go-ipfs-cmds"
-	crypto "gx/ipfs/QmPvyPwuCgJ7pDmrKDxRtsScJgBaM5h4EpRL2qQJsmXf4n/go-libp2p-crypto"
-	peer "gx/ipfs/QmQsErDt8Qgw1XrsXf2BpEzDgGWtB1YLsTAARBup5b6B9W/go-libp2p-peer"
-	"gx/ipfs/QmSP88ryZkHSRn1fnngAaV2Vcn63WUJzAavnRM9CVdU1Ky/go-ipfs-cmdkit"
-	path "gx/ipfs/QmTKaiDxQqVxmA1bRipSuP7hnTSgnMSmEa98NYeS6fcoiv/go-path"
+	cmds "gx/ipfs/Qma6uuSyjkecGhMFFLfzyJDPyoDtNJSHJNweDccZhaWkgU/go-ipfs-cmds"
+	"gx/ipfs/Qmde5VP1qUkyQXKCfmEUA7bP64V2HAptbJ7phuPp7jXWwg/go-ipfs-cmdkit"
+)
+
+var (
+	errAllowOffline = errors.New("can't publish while offline: pass `--allow-offline` to override")
+)
+
+const (
+	ipfsPathOptionName     = "ipfs-path"
+	resolveOptionName      = "resolve"
+	allowOfflineOptionName = "allow-offline"
+	lifeTimeOptionName     = "lifetime"
+	ttlOptionName          = "ttl"
+	keyOptionName          = "key"
+	quieterOptionName      = "quieter"
 )
 
 var PublishCmd = &cmds.Command{
@@ -60,87 +70,73 @@ Alternatively, publish an <ipfs-path> using a valid PeerID (as listed by
 	},
 
 	Arguments: []cmdkit.Argument{
-		cmdkit.StringArg("ipfs-path", true, false, "ipfs path of the object to be published.").EnableStdin(),
+		cmdkit.StringArg(ipfsPathOptionName, true, false, "ipfs path of the object to be published.").EnableStdin(),
 	},
 	Options: []cmdkit.Option{
-		cmdkit.BoolOption("resolve", "Resolve given path before publishing.").WithDefault(true),
-		cmdkit.StringOption("lifetime", "t",
+		cmdkit.BoolOption(resolveOptionName, "Resolve given path before publishing.").WithDefault(true),
+		cmdkit.StringOption(lifeTimeOptionName, "t",
 			`Time duration that the record will be valid for. <<default>>
     This accepts durations such as "300s", "1.5h" or "2h45m". Valid time units are
     "ns", "us" (or "µs"), "ms", "s", "m", "h".`).WithDefault("24h"),
-		cmdkit.StringOption("ttl", "Time duration this record should be cached for (caution: experimental)."),
-		cmdkit.StringOption("key", "k", "Name of the key to be used or a valid PeerID, as listed by 'ipfs key list -l'. Default: <<default>>.").WithDefault("self"),
+		cmdkit.BoolOption(allowOfflineOptionName, "When offline, save the IPNS record to the the local datastore without broadcasting to the network instead of simply failing."),
+		cmdkit.StringOption(ttlOptionName, "Time duration this record should be cached for (caution: experimental)."),
+		cmdkit.StringOption(keyOptionName, "k", "Name of the key to be used or a valid PeerID, as listed by 'ipfs key list -l'. Default: <<default>>.").WithDefault("self"),
+		cmdkit.BoolOption(quieterOptionName, "Q", "Write only final hash."),
 	},
-	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) {
-		n, err := cmdenv.GetNode(env)
+	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+		api, err := cmdenv.GetApi(env)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
-		if !n.OnlineMode() {
-			err := n.SetupOfflineRouting()
-			if err != nil {
-				res.SetError(err, cmdkit.ErrNormal)
-				return
-			}
-		}
+		allowOffline, _ := req.Options[allowOfflineOptionName].(bool)
+		kname, _ := req.Options[keyOptionName].(string)
 
-		if n.Mounts.Ipns != nil && n.Mounts.Ipns.IsActive() {
-			res.SetError(errors.New("cannot manually publish while IPNS is mounted"), cmdkit.ErrNormal)
-			return
-		}
-
-		pstr := req.Arguments[0]
-
-		if n.Identity == "" {
-			res.SetError(errors.New("identity not loaded"), cmdkit.ErrNormal)
-			return
-		}
-
-		popts := new(publishOpts)
-
-		popts.verifyExists, _ = req.Options["resolve"].(bool)
-
-		validtime, _ := req.Options["lifetime"].(string)
-		d, err := time.ParseDuration(validtime)
+		validTimeOpt, _ := req.Options[lifeTimeOptionName].(string)
+		validTime, err := time.ParseDuration(validTimeOpt)
 		if err != nil {
-			res.SetError(fmt.Errorf("error parsing lifetime option: %s", err), cmdkit.ErrNormal)
-			return
+			return fmt.Errorf("error parsing lifetime option: %s", err)
 		}
 
-		popts.pubValidTime = d
+		opts := []options.NamePublishOption{
+			options.Name.AllowOffline(allowOffline),
+			options.Name.Key(kname),
+			options.Name.ValidTime(validTime),
+		}
 
-		ctx := req.Context
-		if ttl, found := req.Options["ttl"].(string); found {
+		if ttl, found := req.Options[ttlOptionName].(string); found {
 			d, err := time.ParseDuration(ttl)
 			if err != nil {
-				res.SetError(err, cmdkit.ErrNormal)
-				return
+				return err
 			}
 
-			ctx = context.WithValue(ctx, "ipns-publish-ttl", d)
+			opts = append(opts, options.Name.TTL(d))
 		}
 
-		kname, _ := req.Options["key"].(string)
-		k, err := keylookup(n, kname)
+		p, err := iface.ParsePath(req.Arguments[0])
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			return err
 		}
 
-		pth, err := path.ParsePath(pstr)
-		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+		if verifyExists, _ := req.Options[resolveOptionName].(bool); verifyExists {
+			_, err := api.ResolveNode(req.Context, p)
+			if err != nil {
+				return err
+			}
 		}
 
-		output, err := publish(ctx, n, k, pth, popts)
+		out, err := api.Name().Publish(req.Context, p, opts...)
 		if err != nil {
-			res.SetError(err, cmdkit.ErrNormal)
-			return
+			if err == iface.ErrOffline {
+				err = errAllowOffline
+			}
+			return err
 		}
-		cmds.EmitOnce(res, output)
+
+		return cmds.EmitOnce(res, &IpnsEntry{
+			Name:  out.Name(),
+			Value: out.Value().String(),
+		})
 	},
 	Encoders: cmds.EncoderMap{
 		cmds.Text: cmds.MakeEncoder(func(req *cmds.Request, w io.Writer, v interface{}) error {
@@ -149,78 +145,15 @@ Alternatively, publish an <ipfs-path> using a valid PeerID (as listed by
 				return e.TypeErr(entry, v)
 			}
 
-			_, err := fmt.Fprintf(w, "Published to %s: %s\n", entry.Name, entry.Value)
+			var err error
+			quieter, _ := req.Options[quieterOptionName].(bool)
+			if quieter {
+				_, err = fmt.Fprintln(w, entry.Name)
+			} else {
+				_, err = fmt.Fprintf(w, "Published to %s: %s\n", entry.Name, entry.Value)
+			}
 			return err
 		}),
 	},
 	Type: IpnsEntry{},
-}
-
-type publishOpts struct {
-	verifyExists bool
-	pubValidTime time.Duration
-}
-
-func publish(ctx context.Context, n *core.IpfsNode, k crypto.PrivKey, ref path.Path, opts *publishOpts) (*IpnsEntry, error) {
-
-	if opts.verifyExists {
-		// verify the path exists
-		_, err := core.Resolve(ctx, n.Namesys, n.Resolver, ref)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	eol := time.Now().Add(opts.pubValidTime)
-	err := n.Namesys.PublishWithEOL(ctx, k, ref, eol)
-	if err != nil {
-		return nil, err
-	}
-
-	pid, err := peer.IDFromPrivateKey(k)
-	if err != nil {
-		return nil, err
-	}
-
-	return &IpnsEntry{
-		Name:  pid.Pretty(),
-		Value: ref.String(),
-	}, nil
-}
-
-func keylookup(n *core.IpfsNode, k string) (crypto.PrivKey, error) {
-
-	res, err := n.GetKey(k)
-	if res != nil {
-		return res, nil
-	}
-
-	if err != nil && err != keystore.ErrNoSuchKey {
-		return nil, err
-	}
-
-	keys, err := n.Repo.Keystore().List()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, key := range keys {
-		privKey, err := n.Repo.Keystore().Get(key)
-		if err != nil {
-			return nil, err
-		}
-
-		pubKey := privKey.GetPublic()
-
-		pid, err := peer.IDFromPublicKey(pubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		if pid.Pretty() == k {
-			return privKey, nil
-		}
-	}
-
-	return nil, fmt.Errorf("no key by the given name or PeerID was found")
 }

@@ -10,10 +10,10 @@ import (
 	"path"
 	"testing"
 
-	"github.com/ipfs/go-ipfs/Godeps/_workspace/src/github.com/jbenet/go-random"
 	"github.com/ipfs/go-ipfs/thirdparty/unit"
 
-	config "gx/ipfs/QmXUU23sGKdT7AHpyJ4aSvYpXbWjbiuYG1CYhZ3ai3btkG/go-ipfs-config"
+	random "gx/ipfs/QmSJ9n2s9NUoA9D849W5jj5SJ94nMcZpj1jCgQJieiNqSt/go-random"
+	config "gx/ipfs/QmbK4EmM2Xx5fmbqK38TGP3PpY66r3tkXLZTcc7dF9mFwM/go-ipfs-config"
 )
 
 var (

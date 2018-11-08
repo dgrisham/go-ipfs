@@ -9,13 +9,15 @@ import (
 	"testing"
 
 	"github.com/ipfs/go-ipfs/core"
+	"github.com/ipfs/go-ipfs/core/coreapi"
+	"github.com/ipfs/go-ipfs/core/coreapi/interface"
 	coreunix "github.com/ipfs/go-ipfs/core/coreunix"
 	mock "github.com/ipfs/go-ipfs/core/mock"
 	"github.com/ipfs/go-ipfs/thirdparty/unit"
 
-	testutil "gx/ipfs/QmRNhSdqzMcuRxX9A1egBeQ3BhDTguDV5HPwi8wRykkPU8/go-testutil"
-	pstore "gx/ipfs/QmeKD8YT7887Xu6Z86iZmpYNxrLogJexqxEugSmaf14k64/go-libp2p-peerstore"
-	mocknet "gx/ipfs/Qmf1u2efhjXYtuyP8SMHYtw4dCkbghnniex2PSp7baA7FP/go-libp2p/p2p/net/mock"
+	pstore "gx/ipfs/QmUymf8fJtideyv3z727BcZUifGBjMZMpCJqu3Gxk5aRUk/go-libp2p-peerstore"
+	mocknet "gx/ipfs/QmXnpYYg2onGLXVxM4Q5PEFcx29k8zeJQkPeLAk9h9naxg/go-libp2p/p2p/net/mock"
+	testutil "gx/ipfs/QmZXjR5X1p4KrQ967cTsy4MymMzUM8mZECF3PV8UcN4o3g/go-testutil"
 )
 
 func BenchmarkCat1MB(b *testing.B) { benchmarkVarCat(b, unit.MB*1) }
@@ -64,6 +66,8 @@ func benchCat(b *testing.B, data []byte, conf testutil.LatencyConfig) error {
 	}
 	defer catter.Close()
 
+	catterApi := coreapi.NewCoreAPI(catter)
+
 	err = mn.LinkAll()
 	if err != nil {
 		return err
@@ -84,8 +88,13 @@ func benchCat(b *testing.B, data []byte, conf testutil.LatencyConfig) error {
 		return err
 	}
 
+	ap, err := iface.ParsePath(added)
+	if err != nil {
+		return err
+	}
+
 	b.StartTimer()
-	readerCatted, err := coreunix.Cat(ctx, catter, added)
+	readerCatted, err := catterApi.Unixfs().Get(ctx, ap)
 	if err != nil {
 		return err
 	}

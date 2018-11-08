@@ -62,7 +62,7 @@ test_expect_success "GET IPFS non existent file returns code expected (404)" '
 '
 
 test_expect_failure "GET IPNS path succeeds" '
-  ipfs name publish "$HASH" &&
+  ipfs name publish --allow-offline "$HASH" &&
   PEERID=$(ipfs config Identity.PeerID) &&
   test_check_peerid "$PEERID" &&
   curl -sfo actual "http://127.0.0.1:$port/ipns/$PEERID"
@@ -105,6 +105,21 @@ test_expect_success "output only has one transfer encoding header" '
   echo "1" > tecount_exp &&
   test_cmp tecount_out tecount_exp
 '
+
+curl_pprofmutex() {
+  curl -f -X POST "http://127.0.0.1:$apiport/debug/pprof-mutex/?fraction=$1"
+}
+
+test_expect_success "set mutex fraction for pprof (negative so it doesn't enable)" '
+  curl_pprofmutex -1
+'
+
+test_expect_success "test failure conditions of mutex pprof endpoint" '
+  test_must_fail curl_pprofmutex &&
+    test_must_fail curl_pprofmutex that_is_string &&
+    test_must_fail curl -f -X GET "http://127.0.0.1:$apiport/debug/pprof-mutex/?fraction=-1"
+'
+
 
 test_expect_success "setup index hash" '
   mkdir index &&
