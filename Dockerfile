@@ -7,6 +7,14 @@ RUN apt-get update && apt-get install -y \
   ca-certificates \
   fuse
 
+RUN git clone https://github.com/dgrisham/go-bitswap /go-bitswap \
+    && cd /go-bitswap \
+    && git checkout feat/peer-weights
+
+RUN git clone https://github.com/dgrisham/go-peertaskqueue /go-peertaskqueue \
+    && cd /go-peertaskqueue \
+    && git checkout feat/peer-priority-lanes
+
 ENV SRC_DIR /go-ipfs
 
 # Download packages first so they can be cached.
